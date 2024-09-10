@@ -16,14 +16,18 @@ public class WeatherForecastController : ControllerBase
 
     // CREATE
     [HttpPost]
-    public ActionResult<WeatherForecastModel> Create(WeatherForecastModel forecast)
+    public ActionResult<WeatherForecastModel> Create()
     {
-        forecast.Id = Guid.NewGuid();
-        if (_forecasts.TryAdd(forecast.Id, forecast))
-        {
-            return CreatedAtAction(nameof(GetById), new { id = forecast.Id }, forecast);
-        }
-        return BadRequest("Failed to add the forecast.");
+        var forecast = new WeatherForecastModel {
+            Id           = Guid.NewGuid(),
+            Date         = DateOnly.FromDateTime(DateTime.Now.AddDays(1)),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary      = Summaries[Random.Shared.Next(Summaries.Length)]
+        };
+
+        _forecasts.TryAdd(forecast.Id, forecast);
+
+        return CreatedAtAction(nameof(Get), forecast);
     }
 
     // READ (All)
@@ -91,10 +95,10 @@ public class WeatherForecastController : ControllerBase
     {
         var forecasts = Enumerable.Range(1, count).Select(index => new WeatherForecastModel
         {
-            Id = Guid.NewGuid(),
-            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            Id           = Guid.NewGuid(),
+            Date         = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
             TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+            Summary      = Summaries[Random.Shared.Next(Summaries.Length)]
         }).ToArray();
 
         foreach (var forecast in forecasts)
