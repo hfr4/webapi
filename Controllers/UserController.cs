@@ -21,18 +21,23 @@ namespace TestAuthentificationToken.Controllers
         public IActionResult AdminsEndpoint()
         {
             var currentUser = _userService.GetCurrentUser();
-
-            return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
+            if (currentUser != null) {
+                return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
+            } else {
+                return Unauthorized("You need to be Administrator !");
+            }
         }
-
 
         [HttpGet("Sellers")]
         [Authorize(Roles = "Seller")]
         public IActionResult SellersEndpoint()
         {
             var currentUser = _userService.GetCurrentUser();
-
-            return Ok($"Hi {currentUser.GivenName}, you are a {currentUser.Role}");
+            if (currentUser != null) {
+                return Ok($"Hi {currentUser.GivenName}, you are a {currentUser.Role}");
+            } else {
+                return Unauthorized("You need to be Seller !");
+            }
         }
 
         [HttpGet("AdminsAndSellers")]
@@ -40,8 +45,11 @@ namespace TestAuthentificationToken.Controllers
         public IActionResult AdminsAndSellersEndpoint()
         {
             var currentUser = _userService.GetCurrentUser();
-
-            return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
+            if (currentUser != null) {
+                return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
+            } else {
+                return Unauthorized("You need to be Administrator or Seller !");
+            }
         }
 
         [HttpGet("Public")]
