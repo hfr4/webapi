@@ -1,61 +1,69 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TestAuthentificationToken.Services;
 
-namespace TestAuthentificationToken.Controllers
+
+[Route("api/[controller]")]
+[ApiController]
+public class UserController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class UserController : ControllerBase
+    [HttpGet("Admins")]
+    [Authorize]
+    public IActionResult AdminsEndpoint()
     {
-        private readonly UserService _userService;
-
-        public UserController(UserService userService)
-        {
-            _userService = userService;
+        var currentUser = GetCurrentUser();
+        if (currentUser != null) {
+            return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
+        } else {
+            return Unauthorized("You need to be Administrator !");
         }
+    }
 
-        [HttpGet("Admins")]
-        [Authorize]
-        public IActionResult AdminsEndpoint()
-        {
-            var currentUser = _userService.GetCurrentUser();
-            if (currentUser != null) {
-                return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
-            } else {
-                return Unauthorized("You need to be Administrator !");
-            }
+    [HttpGet("Sellers")]
+    [Authorize(Roles = "Seller")]
+    public IActionResult SellersEndpoint()
+    {
+        var currentUser = GetCurrentUser();
+        if (currentUser != null) {
+            return Ok($"Hi {currentUser.GivenName}, you are a {currentUser.Role}");
+        } else {
+            return Unauthorized("You need to be Seller !");
         }
+    }
 
-        [HttpGet("Sellers")]
-        [Authorize(Roles = "Seller")]
-        public IActionResult SellersEndpoint()
-        {
-            var currentUser = _userService.GetCurrentUser();
-            if (currentUser != null) {
-                return Ok($"Hi {currentUser.GivenName}, you are a {currentUser.Role}");
-            } else {
-                return Unauthorized("You need to be Seller !");
-            }
+    [HttpGet("AdminsAndSellers")]
+    [Authorize(Roles = "Administrator,Seller")]
+    public IActionResult AdminsAndSellersEndpoint()
+    {
+        var currentUser = GetCurrentUser();
+        if (currentUser != null) {
+            return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
+        } else {
+            return Unauthorized("You need to be Administrator or Seller !");
         }
+    }
 
-        [HttpGet("AdminsAndSellers")]
-        [Authorize(Roles = "Administrator,Seller")]
-        public IActionResult AdminsAndSellersEndpoint()
-        {
-            var currentUser = _userService.GetCurrentUser();
-            if (currentUser != null) {
-                return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
-            } else {
-                return Unauthorized("You need to be Administrator or Seller !");
-            }
-        }
+    [HttpGet("Public")]
+    public IActionResult Public()
+    {
+        return Ok("Hi, you're on public property");
+    }
 
-        [HttpGet("Public")]
-        public IActionResult Public()
+    private UserModel? GetCurrentUser()
+    {
+        var identity = HttpContext.User.Identity as ClaimsIdentity;
+        if (identity != null)
         {
-            return Ok("Hi, you're on public property");
+            var userClaims = identity.Claims;
+            return new UserModel
+            {
+                Username     = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier)?.Value,
+                EmailAddress = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
+                GivenName    = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.GivenName)?.Value,
+                Surname      = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Surname)?.Value,
+                Role         = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value,
+            };
         }
+        return null;
     }
 }

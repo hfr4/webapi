@@ -1,23 +1,12 @@
-namespace TodoApi;
-
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
-using TestAuthentificationToken.Controllers;
-using TestAuthentificationToken.Services;
-
+using System.Security.Claims;
 
 [ApiController]
 [Route("api/[controller]")]
 public class WeatherForecastController : ControllerBase
 {
-    private readonly UserService _userService;
-
-    public WeatherForecastController(UserService userService)
-    {
-        _userService = userService;
-    }
-
     private static readonly string[] Summaries = new[]
     {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -30,7 +19,7 @@ public class WeatherForecastController : ControllerBase
     [Authorize(Roles = "Administrator")]
     public ActionResult<WeatherForecastModel> Create()
     {
-        var currentUser = _userService.GetCurrentUser();
+        var currentUser = GetCurrentUser();
 
         if (currentUser != null) {
             var forecast = new WeatherForecastModel {
@@ -125,5 +114,23 @@ public class WeatherForecastController : ControllerBase
         }
 
         return CreatedAtAction(nameof(Get), forecasts);
+    }
+
+    private UserModel? GetCurrentUser()
+    {
+        var identity = HttpContext.User.Identity as ClaimsIdentity;
+        if (identity != null)
+        {
+            var userClaims = identity.Claims;
+            return new UserModel
+            {
+                Username     = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier)?.Value,
+                EmailAddress = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
+                GivenName    = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.GivenName)?.Value,
+                Surname      = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Surname)?.Value,
+                Role         = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value,
+            };
+        }
+        return null;
     }
 }

@@ -1,5 +1,3 @@
-namespace TodoApi;
-
 public class WeatherForecastModel
 {
     public Guid Id { get; set; }
