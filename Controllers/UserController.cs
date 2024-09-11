@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using TestAuthentificationToken.Services;
 
 namespace TestAuthentificationToken.Controllers
 {
@@ -8,11 +9,18 @@ namespace TestAuthentificationToken.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
+        private readonly UserService _userService;
+
+        public UserController(UserService userService)
+        {
+            _userService = userService;
+        }
+
         [HttpGet("Admins")]
         [Authorize]
         public IActionResult AdminsEndpoint()
         {
-            var currentUser = GetCurrentUser();
+            var currentUser = _userService.GetCurrentUser();
 
             return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
         }
@@ -22,7 +30,7 @@ namespace TestAuthentificationToken.Controllers
         [Authorize(Roles = "Seller")]
         public IActionResult SellersEndpoint()
         {
-            var currentUser = GetCurrentUser();
+            var currentUser = _userService.GetCurrentUser();
 
             return Ok($"Hi {currentUser.GivenName}, you are a {currentUser.Role}");
         }
@@ -31,7 +39,7 @@ namespace TestAuthentificationToken.Controllers
         [Authorize(Roles = "Administrator,Seller")]
         public IActionResult AdminsAndSellersEndpoint()
         {
-            var currentUser = GetCurrentUser();
+            var currentUser = _userService.GetCurrentUser();
 
             return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
         }
@@ -40,26 +48,6 @@ namespace TestAuthentificationToken.Controllers
         public IActionResult Public()
         {
             return Ok("Hi, you're on public property");
-        }
-
-        private UserModel GetCurrentUser()
-        {
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-
-            if (identity != null)
-            {
-                var userClaims = identity.Claims;
-
-                return new UserModel
-                {
-                    Username     = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier)?.Value,
-                    EmailAddress = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
-                    GivenName    = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.GivenName)?.Value,
-                    Surname      = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Surname)?.Value,
-                    Role         = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value,
-                };
-            }
-            return null;
         }
     }
 }

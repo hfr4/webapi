@@ -2,11 +2,22 @@ namespace TodoApi;
 
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Authorization;
+using TestAuthentificationToken.Controllers;
+using TestAuthentificationToken.Services;
+
 
 [ApiController]
 [Route("api/[controller]")]
 public class WeatherForecastController : ControllerBase
 {
+    private readonly UserService _userService;
+
+    public WeatherForecastController(UserService userService)
+    {
+        _userService = userService;
+    }
+
     private static readonly string[] Summaries = new[]
     {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -16,18 +27,25 @@ public class WeatherForecastController : ControllerBase
 
     // CREATE
     [HttpPost]
+    [Authorize(Roles = "Administrator")]
     public ActionResult<WeatherForecastModel> Create()
     {
-        var forecast = new WeatherForecastModel {
-            Id           = Guid.NewGuid(),
-            Date         = DateOnly.FromDateTime(DateTime.Now.AddDays(1)),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary      = Summaries[Random.Shared.Next(Summaries.Length)]
-        };
+        var currentUser = _userService.GetCurrentUser();
 
-        _forecasts.TryAdd(forecast.Id, forecast);
+        if (currentUser != null) {
+            var forecast = new WeatherForecastModel {
+                Id           = Guid.NewGuid(),
+                Date         = DateOnly.FromDateTime(DateTime.Now.AddDays(1)),
+                TemperatureC = Random.Shared.Next(-20, 55),
+                Summary      = Summaries[Random.Shared.Next(Summaries.Length)]
+            };
 
-        return CreatedAtAction(nameof(Get), forecast);
+            _forecasts.TryAdd(forecast.Id, forecast);
+
+            return CreatedAtAction(nameof(Get), forecast);
+        } else {
+            return Unauthorized("You need to be admin to add a new Weather !");
+        }
     }
 
     // READ (All)
