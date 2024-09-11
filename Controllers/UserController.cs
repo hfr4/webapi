@@ -13,7 +13,7 @@ public class UserController : ControllerBase
     {
         var currentUser = GetCurrentUser();
         if (currentUser != null) {
-            return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
+            return Ok($"Hi {currentUser.Username}, you are an {currentUser.Role}");
         } else {
             return Unauthorized("You need to be Administrator !");
         }
@@ -25,7 +25,7 @@ public class UserController : ControllerBase
     {
         var currentUser = GetCurrentUser();
         if (currentUser != null) {
-            return Ok($"Hi {currentUser.GivenName}, you are a {currentUser.Role}");
+            return Ok($"Hi {currentUser.Username}, you are a {currentUser.Role}");
         } else {
             return Unauthorized("You need to be Seller !");
         }
@@ -37,7 +37,7 @@ public class UserController : ControllerBase
     {
         var currentUser = GetCurrentUser();
         if (currentUser != null) {
-            return Ok($"Hi {currentUser.GivenName}, you are an {currentUser.Role}");
+            return Ok($"Hi {currentUser.Username}, you are an {currentUser.Role}");
         } else {
             return Unauthorized("You need to be Administrator or Seller !");
         }
@@ -59,8 +59,6 @@ public class UserController : ControllerBase
             {
                 Username     = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier)?.Value,
                 EmailAddress = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
-                GivenName    = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.GivenName)?.Value,
-                Surname      = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Surname)?.Value,
                 Role         = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value,
             };
         }

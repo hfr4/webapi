@@ -85,15 +85,22 @@ public class WeatherForecastController : ControllerBase
         return NotFound();
     }
 
-    // DELETE
-    [HttpDelete("{id}")]
-    public IActionResult Delete(Guid id)
+    // DELETE (All Forecasts)
+    [HttpDelete]
+    [Authorize(Roles = "Administrator")]
+    public IActionResult Delete()
     {
-        if (_forecasts.TryRemove(id, out _))
+        var currentUser = GetCurrentUser();
+
+        if (currentUser != null)
         {
+            _forecasts.Clear();
             return NoContent();
         }
-        return NotFound();
+        else
+        {
+            return Unauthorized("You need to be an admin to delete all forecasts!");
+        }
     }
 
     // Generate random forecasts
@@ -126,8 +133,6 @@ public class WeatherForecastController : ControllerBase
             {
                 Username     = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier)?.Value,
                 EmailAddress = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
-                GivenName    = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.GivenName)?.Value,
-                Surname      = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Surname)?.Value,
                 Role         = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value,
             };
         }
